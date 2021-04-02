@@ -4,3 +4,7 @@ ver 0
 ver 0.0.1
     manifest: added github url; added "nifti" in image descriptions; added cbica url; added ld_library_path to environment var's
     run: added if statement to avoid empty output directory; removed "afam00" from container name
+
+ver 0.0.2
+    manifest: updated github url
+    run: fixed output dir

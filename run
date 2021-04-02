@@ -39,7 +39,8 @@ if [[ -f $t1_file ]] && \
    [[ -f $t2_file ]] && \
    [[ -f $flair_file ]] ; then
 
-  mkdir BraTS_output # make output directory
+  output_dir=BraTS_output
+  mkdir ${output_dir} # make output directory
   CaPTk_dir=/opt/captk/1.8.1/usr # path to install (in Docker container)
 
   echo "$CONTAINER  Running CaPTk BraTSPipeline"
@@ -48,17 +49,17 @@ if [[ -f $t1_file ]] && \
     -t1c "$t1ce_file" \
     -t2 "$t2_file" \
     -fl "$flair_file" \
-    -o BraTS_output
+    -o ${output_dir}
 
     out_end_str=SRI
 
   ## move results to output/ directory
-  if [ "$(ls -A BRATS_output)" ]; then # if directory is not empty
-    mv BRATS_output/brainTumorMask_${out_end_str}.nii.gz output/
-    mv BRATS_output/*_to_${out_end_str}.nii.gz output/
+  if [ "$(ls -A ${output_dir})" ]; then # if directory is not empty
+    mv ${output_dir}/brainTumorMask_${out_end_str}.nii.gz output/
+    mv ${output_dir}/*_to_${out_end_str}.nii.gz output/
 
-    tar -cvzf BRATS_output.tgz BRATS_output
-    mv BRATS_output.tgz output/
+    tar -cvzf ${output_dir}.tgz ${output_dir}
+    mv ${output_dir}.tgz output/
   fi
 
 ################# Finish up #################
