@@ -4,7 +4,7 @@
   "description": "This tool provides a pipeline for pre-processing and auto-segmentation of structural images. Steps include: (1) orientation to standard (LPS/RAI) coordinates, (2) registration to SRI atlas, (3) skull stripping, (4) auto-segmentation with trained CNN model from BRATS 2017 challenge. User should manually check registration results. For best results T1 images should be 3D mprage sequences. If auto-segmentation model doesn't find a solution, output mask file will contain all zeros.",
   "author": "Ariana Familiar",
   "maintainer": "Ariana <familiara@chop.edu>",
-  "source": "https://github.com/afamiliar/fw-captk-brats-pipeline",
+  "source": "https://github.com/d3b-center/fw-captk-brats-pipeline", 
   "url": "https://cbica.github.io/CaPTk/preprocessing_brats.html",
   "version": "0.0.1",
   "license": "Apache-2.0",
