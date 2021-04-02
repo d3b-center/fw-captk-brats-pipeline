@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+#	template based on:  https://github.com/scitran-apps/fsl-bet/blob/master/run
+#
+#   DeepMedic needs at least 6 GB memory limit (fails at 4GB)
+#
+
+CONTAINER="[captk-brats-pipeline]"
+echo -e "$CONTAINER  Initiated"
+
+###############################################################################
+## Built to flywheel-v0 spec.
+
+FLYWHEEL_BASE=/flywheel/v0
+OUTPUT_DIR=$FLYWHEEL_BASE/output
+T1_DIR=$FLYWHEEL_BASE/input/T1
+T1CE_DIR=$FLYWHEEL_BASE/input/T1CE
+T2_DIR=$FLYWHEEL_BASE/input/T2
+FL_DIR=$FLYWHEEL_BASE/input/FLAIR
+MANIFEST=$FLYWHEEL_BASE/manifest.json
+
+###############################################################################
+## Configure the ENV
+
+export USER=Flywheel
+
+###############################################################################
+## Execute the main processes
+
+## Find the input files
+t1_file=$(find $T1_DIR/* -maxdepth 0 -type f -name "*.nii*")
+t1ce_file=$(find $T1CE_DIR/* -maxdepth 0 -type f -name "*.nii*")
+t2_file=$(find $T2_DIR/* -maxdepth 0 -type f -name "*.nii*")
+flair_file=$(find $FL_DIR/* -maxdepth 0 -type f -name "*.nii*")
+
+## If necessary input files are found, run the thing
+if [[ -f $t1_file ]] && \
+   [[ -f $t1ce_file ]] && \
+   [[ -f $t2_file ]] && \
+   [[ -f $flair_file ]] ; then
+
+  mkdir BraTS_output # make output directory
+  CaPTk_dir=/opt/captk/1.8.1/usr # path to install (in Docker container)
+
+  echo "$CONTAINER  Running CaPTk BraTSPipeline"
+  ${CaPTk_dir}/bin/BraTSPipeline \
+    -t1 "$t1_file" \
+    -t1c "$t1ce_file" \
+    -t2 "$t2_file" \
+    -fl "$flair_file" \
+    -o BraTS_output
+
+    out_end_str=SRI
+
+  ## move results to output/ directory
+  if [ "$(ls -A BRATS_output)" ]; then # if directory is not empty
+    mv BRATS_output/brainTumorMask_${out_end_str}.nii.gz output/
+    mv BRATS_output/*_to_${out_end_str}.nii.gz output/
+
+    tar -cvzf BRATS_output.tgz BRATS_output
+    mv BRATS_output.tgz output/
+  fi
+
+################# Finish up #################
+  STATUS=$?
+else
+  echo "$CONTAINER  Input files not found!"
+  exit 1
+fi
+
+# Check exit status
+if [[ $STATUS == 0 ]]
+  then
+    echo -e "$CONTAINER  Done!"
+
+  else
+    echo "$CONTAINER  command returned a non-zero exit code = [$STATUS]."
+    exit 1
+fi
+
+exit 0

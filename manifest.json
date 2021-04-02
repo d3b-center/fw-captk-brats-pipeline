@@ -1,0 +1,74 @@
+{
+  "name": "captk-brats-pipeline",
+  "label": "CaPTk - BraTS Pipeline",
+  "description": "This tool provides a pipeline for pre-processing and auto-segmentation of structural images. Steps include: (1) orientation to standard (LPS/RAI) coordinates, (2) registration to SRI atlas, (3) skull stripping, (4) auto-segmentation with trained CNN model from BRATS 2017 challenge. User should manually check registration results. For best results T1 images should be 3D mprage sequences. If auto-segmentation model doesn't find a solution, output mask file will contain all zeros.",
+  "author": "Ariana Familiar",
+  "maintainer": "Ariana <familiara@chop.edu>",
+  "source": "https://github.com/afamiliar/fw-captk-brats-pipeline",
+  "url": "https://cbica.github.io/CaPTk/preprocessing_brats.html",
+  "version": "0.0.1",
+  "license": "Apache-2.0",
+  "custom": {
+    "gear-builder": {
+      "category": "analysis",
+      "image": "afam00/captk-brats-pipeline:0.0.0"
+    },
+    "flywheel": {
+      "suite": "CaPTk"
+    }
+  },
+  "inputs": {
+    "T1": {
+      "base": "file",
+      "description": "T1-weighted image no contrast agent (nifti).",
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
+    },
+    "T1CE": {
+      "base": "file",
+      "description": "T1-weighted image with contrast agent (nifti).",
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
+    },
+    "T2": {
+      "base": "file",
+      "description": "T2-weighted image (nifti).",
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
+    },
+    "FLAIR": {
+      "base": "file",
+      "description": "Fluid attenuated inversion recovery image (nifti).",
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
+    }
+  },
+  "config": {
+  },
+  "environment":{
+    "CAPTK_VERSION":"1.8.1",
+    "HOME":"/root",
+    "HOSTNAME":"0b633f948575",
+    "LD_LIBRARY_PATH":"/opt/captk/1.8.1/usr/lib/",
+    "MESA_GL_VERSION_OVERRIDE":"3.2",
+    "OLDPWD":"/opt/captk/1.8.1/usr",
+    "PATH":"/opt/captk/1.8.1/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PWD":"/opt/captk/1.8.1/usr/bin",
+    "QT_GRAPHICSSYSTEM":"native",
+    "QT_X11_NO_MITSHM":"1",
+    "SHLVL":"1",
+    "TERM":"xterm"
+  }
+}
