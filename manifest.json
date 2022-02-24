@@ -6,12 +6,12 @@
   "maintainer": "Ariana <familiara@chop.edu>",
   "source": "https://github.com/d3b-center/fw-captk-brats-pipeline", 
   "url": "https://cbica.github.io/CaPTk/preprocessing_brats.html",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "Apache-2.0",
   "custom": {
     "gear-builder": {
       "category": "analysis",
-      "image": "afam00/captk-brats-pipeline:0.0.0"
+      "image": "chop.flywheel.io/captk-brats-pipeline:0.0.3"
     },
     "flywheel": {
       "suite": "CaPTk"
