@@ -56,6 +56,7 @@ if [[ -f $t1_file ]] && \
   ## move results to output/ directory
   if [ "$(ls -A ${output_dir})" ]; then # if directory is not empty
     mv ${output_dir}/brainTumorMask_${out_end_str}.nii.gz output/
+    mv ${output_dir}/brainMask_${out_end_str}.nii.gz output/
     mv ${output_dir}/*_to_${out_end_str}.nii.gz output/
 
     tar -cvzf ${output_dir}.tgz ${output_dir}
