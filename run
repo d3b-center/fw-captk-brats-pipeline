@@ -24,6 +24,7 @@ CONFIG_FILE=$FLYWHEEL_BASE/config.json
 ###############################################################################
 ## Configure the ENV
 export USER=Flywheel
+alias python=python3
 
 ###############################################################################
 # Initialize config parameters

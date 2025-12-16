@@ -10,6 +10,10 @@ FROM cbica/captk:2021.03.29
 LABEL authors="CBICA_UPenn <software@cbica.upenn.edu>"
 
 #############################################
+# Install necessary packages
+RUN sudo apt-get install -y jq
+
+#############################################
 # Setup default flywheel/v0 directory
 ENV FLYWHEEL=/flywheel/v0
 RUN mkdir -p ${FLYWHEEL}
