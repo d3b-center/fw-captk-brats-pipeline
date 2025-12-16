@@ -90,17 +90,23 @@ t2_file=$(find $T2_DIR/* -maxdepth 0 -type f -name "*.nii*")
 flair_file=$(find $FL_DIR/* -maxdepth 0 -type f -name "*.nii*")
 
 all_four_im_found=1
+fake_t1=0
+fake_t1ce=0
+fake_t2=0
+fake_flair=0
 
 # T1 <-> T1CE
 if [[ ! -f $t1_file ]] && [[ -f $t1ce_file ]] ; then
   cp "$t1ce_file" "$T1_DIR/T1.nii.gz"
   echo "$CONTAINER  WARNING Missing T1w file, using duplicate T1CE file as the T1w."
   all_four_im_found=0
+  fake_t1=1
 fi
 if [[ ! -f $t1ce_file ]] && [[ -f $t1_file ]] ; then
   cp "$t1_file" "$T1CE_DIR/T1CE.nii.gz"
   echo "$CONTAINER  WARNING Missing T1CE file, using duplicate T1w file as the T1CE."
   all_four_im_found=0
+  fake_t1ce=1
 fi
 
 # T2 <-> FLAIR
@@ -108,11 +114,13 @@ if [[ ! -f $t2_file ]] && [[ -f $flair_file ]] ; then
   cp "$flair_file" "$T2_DIR/T2.nii.gz"
   echo "$CONTAINER  WARNING Missing T2w file, using duplicate FLAIR file as the T2w."
   all_four_im_found=0
+  fake_t2=1
 fi
 if [[ ! -f $flair_file ]] && [[ -f $t2_file ]] ; then
   cp "$t2_file" "$FL_DIR/FLAIR.nii.gz"
   echo "$CONTAINER  WARNING Missing FLAIR file, using duplicate T2w file as the FLAIR."
   all_four_im_found=0
+  fake_flair=1
 fi
 
 # Both T1 + T1CE missing
@@ -122,11 +130,15 @@ if [[ ! -f "$t1_file" ]] && [[ ! -f "$t1ce_file" ]]; then
       cp "$t2_file" "$T1CE_DIR/T1CE.nii.gz"
       echo "$CONTAINER  WARNING Missing T1 & T1CE files, using duplicate T2w file as the T1/T1CE."
       all_four_im_found=0
+      fake_t1=1
+      fake_t1ce=1
     elif [[ -f "$flair_file" ]]; then
       cp "$flair_file" "$T1_DIR/T1.nii.gz"
       cp "$flair_file" "$T1CE_DIR/T1CE.nii.gz"
       echo "$CONTAINER  WARNING Missing T1 & T1CE files, using duplicate FLAIR file as the T1/T1CE."
       all_four_im_found=0
+      fake_t1=1
+      fake_t1ce=1
     fi
 fi
 
@@ -137,11 +149,15 @@ if [[ ! -f "$t2_file" ]] && [[ ! -f "$flair_file" ]]; then
       cp "$t1_file" "$FL_DIR/FLAIR.nii.gz"
       echo "$CONTAINER  WARNING Missing T2 & FLAIR files, using duplicate T1 file as the T2/FLAIR."
       all_four_im_found=0
+      fake_t2=1
+      fake_flair=1
     elif [[ -f "$t1ce_w" ]]; then
       cp "$t1ce_file" "$T2_DIR/T2.nii.gz"
       cp "$t1ce_file" "$FL_DIR/FLAIR.nii.gz"
       echo "$CONTAINER  WARNING Missing T2 & FLAIR files, using duplicate T1CE file as the T2/FLAIR."
       all_four_im_found=0
+      fake_t2=1
+      fake_flair=1
     fi
 fi
 
@@ -190,8 +206,8 @@ if [[ -f $t1_file ]] && \
   adc_file=$(find $ADC_DIR/* -maxdepth 0 -type f -name "*.nii*")
   if [[ -f $adc_file ]] && [[ $all_four_im_found -eq 1 ]]; then
     echo "$CONTAINER  Registering ADC to T1CE_to_SRI"
-    t1ce_preproc="output/T1CE_to_SRI.nii.gz"
-    reg_mat="output/affine_matrix.mat"
+    t1ce_preproc=${output_dir}/T1CE_to_SRI.nii.gz
+    reg_mat=${output_dir}/affine_matrix.mat
     # generate an affine transformation matrix
     ${CaPTk_dir}/bin/greedy -d 3 -a -m NMI \
             -i "$t1ce_preproc" "$adc_file" \
@@ -200,7 +216,7 @@ if [[ -f $t1_file ]] && \
     # apply the transformation matrix to the ADC image (perform co-reg)
     ${CaPTk_dir}/bin/greedy -d 3 -rf "$t1ce_preproc" \
             -ri LINEAR \
-            -rm "$adc_file" "output/ADC_to_SRI.nii.gz" \
+            -rm "$adc_file" ${output_dir}/ADC_to_SRI.nii.gz \
             -r "$reg_mat"
   fi
 
@@ -216,8 +232,22 @@ if [[ -f $t1_file ]] && \
       mv ${output_dir}/brainTumorMask_${out_end_str}.nii.gz output/
     fi
 
-    mv ${output_dir}/*_to_${out_end_str}.nii.gz output/
+    # remove dummy files from output
+    if [[ $fake_t1 -eq 1 ]]; then
+      mv ${output_dir}/T1_* .
+    fi
+    if [[ $fake_t1ce -eq 1 ]]; then
+      mv ${output_dir}/T1CE_* .
+    fi
+    if [[ $fake_t2 -eq 1 ]]; then
+      mv ${output_dir}/T2_* .
+    fi
+    if [[ $fake_flair -eq 1 ]]; then
+      mv ${output_dir}/FL_* .
+    fi
 
+    # move final output files to output/ dir to be uploaded back to instance
+    mv ${output_dir}/*_to_${out_end_str}.nii.gz output/
     tar -cvzf ${output_dir}.tgz ${output_dir}
     mv ${output_dir}.tgz output/
   fi

@@ -6,12 +6,12 @@
   "maintainer": "D3b-TIRU <flywheel@d3b.center>",
   "source": "https://github.com/d3b-center/fw-captk-brats-pipeline",
   "url": "https://cbica.github.io/CaPTk/preprocessing_brats.html",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "Apache-2.0",
   "custom": {
     "gear-builder": {
       "category": "analysis",
-      "image": "chop.flywheel.io/captk-brats-pipeline:0.1.0"
+      "image": "chop.flywheel.io/captk-brats-pipeline:0.1.1"
     },
     "flywheel": {
       "suite": "CaPTk"
@@ -20,6 +20,7 @@
   "inputs": {
     "T1": {
       "base": "file",
+      "optional": true,
       "description": "T1-weighted image no contrast agent (nifti).",
       "type": {
         "enum": [
@@ -29,6 +30,7 @@
     },
     "T1CE": {
       "base": "file",
+      "optional": true,
       "description": "T1-weighted image with contrast agent (nifti).",
       "type": {
         "enum": [
@@ -38,6 +40,7 @@
     },
     "T2": {
       "base": "file",
+      "optional": true,
       "description": "T2-weighted image (nifti).",
       "type": {
         "enum": [
@@ -47,6 +50,7 @@
     },
     "FLAIR": {
       "base": "file",
+      "optional": true,
       "description": "Fluid attenuated inversion recovery image (nifti).",
       "type": {
         "enum": [
@@ -56,6 +60,7 @@
     },
     "ADC": {
       "base": "file",
+      "optional": true,
       "description": "Diffusion ADC image (nifti).",
       "type": {
         "enum": [

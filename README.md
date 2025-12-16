@@ -47,17 +47,18 @@ The gear can take up to 5 sequences as input. ADC will only be processed if all 
 
 - **run_deepmedic_skullstripping**: Whether to run DeepMedic-based skullstripping after pre-processing (default: False)
 - **run_deepmedic_tumorsegmentation**:Whether to run DeepMedic-based tumor segmentation (BraTS pretrained model) after pre-processing (default: False)
+- **save_intermediate_files**: Whether to save intermediate files (default: False)
+- **debug**: Whether to print debugging information (default: False)
 
 ## Outputs:
 
-- **output_name**: output description
-
-If none, write None
+- Co-registered, resampled input files
+- (optional) DL-based brain mask (if user-specified in configuration)
+- (optional) DL-based tumor segmentation mask (if user-specified in configuration)
 
 ## Limitations
 
-Describe any limitations that would be useful for the user to know.
 
 ## Notes
 
-Any development notes, any potential areas for future development
+- only co-registers ADC to T1CE if all four input sequences are found (this behavior could be modified)
