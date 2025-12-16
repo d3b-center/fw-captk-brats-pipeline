@@ -12,7 +12,7 @@ LABEL authors="CBICA_UPenn <software@cbica.upenn.edu>"
 #############################################
 # Install necessary packages
 RUN sudo apt-get update
-RUN sudo apt-get install -y jq python3-nibabel python3-numpy
+RUN sudo apt-get install -y jq python3-nibabel python3-numpy python3-six
 
 #############################################
 # Setup default flywheel/v0 directory

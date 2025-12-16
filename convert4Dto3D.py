@@ -14,5 +14,6 @@ converted_img = sys.argv[1]
 try:
     new_img = convert4Dto3D(img_path)
     nib.save(new_img, converted_img)
+    print(f"        Converted 4D input image {img_path} to 3D")
 except IndexError:
-    print(f"The input image is not 4D, so no conversion required")
+    print(f"        The input image {img_path} is not 4D, so no conversion required")
