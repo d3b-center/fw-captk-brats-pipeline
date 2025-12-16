@@ -11,7 +11,8 @@ LABEL authors="CBICA_UPenn <software@cbica.upenn.edu>"
 
 #############################################
 # Install necessary packages
-RUN sudo apt-get install -y jq
+RUN sudo apt-get update
+RUN sudo apt-get install -y jq python3-nibabel python3-numpy
 
 #############################################
 # Setup default flywheel/v0 directory
@@ -20,6 +21,7 @@ RUN mkdir -p ${FLYWHEEL}
 WORKDIR ${FLYWHEEL}
 COPY run ${FLYWHEEL}/run
 COPY manifest.json ${FLYWHEEL}/manifest.json
+COPY *.py ${FLYWHEEL}/
 
 #############################################
 # Configure entrypoint

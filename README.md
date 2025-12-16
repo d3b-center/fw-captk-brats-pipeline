@@ -31,6 +31,8 @@ User should manually check registration results. For best results T1 images shou
 
 - CaPTk
 - jq
+- numpy
+- nibabel
 
 ## Inputs:
 

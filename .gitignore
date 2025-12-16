@@ -24,3 +24,4 @@ gear_*
 # Imaging files
 *.svs
 *.nii.gz
+captk-*
