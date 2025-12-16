@@ -17,21 +17,148 @@ T1_DIR=$FLYWHEEL_BASE/input/T1
 T1CE_DIR=$FLYWHEEL_BASE/input/T1CE
 T2_DIR=$FLYWHEEL_BASE/input/T2
 FL_DIR=$FLYWHEEL_BASE/input/FLAIR
+ADC_DIR=$FLYWHEEL_BASE/input/ADC
 MANIFEST=$FLYWHEEL_BASE/manifest.json
+CONFIG_FILE=$FLYWHEEL_BASE/config.json
 
 ###############################################################################
 ## Configure the ENV
-
 export USER=Flywheel
 
 ###############################################################################
-## Execute the main processes
+# Initialize config parameters
+run_deepmedic_skullstripping=0
+run_deepmedic_tumorsegmentation=0
+save_intermediate_files=0
+debug=0
 
-## Find the input files
+# Parse config options from CONFIG file or MANIFEST
+if [[ -f $CONFIG_FILE ]]; then
+  echo "$CONTAINER  $CONFIG_FILE found. Loading config..."
+
+  if [[ $(jq -r <$CONFIG_FILE '''.config.run_deepmedic_skullstripping') == 'true' ]]; then
+    run_deepmedic_skullstripping=1
+    echo "$CONTAINER  Configured TRUE for DeepMedic skull-stripping."
+  fi
+
+  if [[ $(jq -r <$CONFIG_FILE '''.config.run_deepmedic_tumorsegmentation') == 'true' ]]; then
+    run_deepmedic_tumorsegmentation=1
+    echo "$CONTAINER  Configured TRUE for DeepMedic tumor segmentation."
+  fi
+
+  if [[ $(jq -r <$CONFIG_FILE '''.config.save_intermediate_files') == 'true' ]]; then
+    save_intermediate_files=1
+    echo "$CONTAINER  Configured TRUE for saving intermediate files."
+  fi
+
+  if [[ $(jq -r <$CONFIG_FILE '''.config.debug') == 'true' ]]; then
+    debug=1
+    echo "$CONTAINER  Configured TRUE for printing debugging information."
+  fi
+
+else
+  echo "$CONTAINER  $CONFIG_FILE not found. Loading defaults from $MANIFEST..."
+
+  if [[ $(jq -r <$MANIFEST '''.config.run_deepmedic_skullstripping.default') == 'true' ]]; then
+    run_deepmedic_skullstripping=1
+    echo "$CONTAINER  Configured TRUE for DeepMedic skull-stripping."
+  fi
+
+  if [[ $(jq -r <$MANIFEST '''.config.run_deepmedic_tumorsegmentation.default') == 'true' ]]; then
+    run_deepmedic_tumorsegmentation=1
+    echo "$CONTAINER  Configured TRUE for DeepMedic tumor segmentation."
+  fi
+
+  if [[ $(jq -r <$MANIFEST '''.config.save_intermediate_files.default') == 'true' ]]; then
+    save_intermediate_files=1
+    echo "$CONTAINER  Configured TRUE for saving intermediate files."
+  fi
+
+  if [[ $(jq -r <$MANIFEST '''.config.debug.default') == 'true' ]]; then
+    debug=1
+    echo "$CONTAINER  Configured TRUE for printing debugging information."
+  fi
+
+fi
+
+###############################################################################
+
+## Find the original input files
 t1_file=$(find $T1_DIR/* -maxdepth 0 -type f -name "*.nii*")
 t1ce_file=$(find $T1CE_DIR/* -maxdepth 0 -type f -name "*.nii*")
 t2_file=$(find $T2_DIR/* -maxdepth 0 -type f -name "*.nii*")
 flair_file=$(find $FL_DIR/* -maxdepth 0 -type f -name "*.nii*")
+
+all_four_im_found=1
+
+# T1 <-> T1CE
+if [[ ! -f $t1_file ]] && [[ -f $t1ce_file ]] ; then
+  cp "$t1ce_file" "$T1_DIR/T1.nii.gz"
+  echo "$CONTAINER  WARNING Missing T1w file, using duplicate T1CE file as the T1w."
+  all_four_im_found=0
+fi
+if [[ ! -f $t1ce_file ]] && [[ -f $t1_file ]] ; then
+  cp "$t1_file" "$T1CE_DIR/T1CE.nii.gz"
+  echo "$CONTAINER  WARNING Missing T1CE file, using duplicate T1w file as the T1CE."
+  all_four_im_found=0
+fi
+
+# T2 <-> FLAIR
+if [[ ! -f $t2_file ]] && [[ -f $flair_file ]] ; then
+  cp "$flair_file" "$T2_DIR/T2.nii.gz"
+  echo "$CONTAINER  WARNING Missing T2w file, using duplicate FLAIR file as the T2w."
+  all_four_im_found=0
+fi
+if [[ ! -f $flair_file ]] && [[ -f $t2_file ]] ; then
+  cp "$t2_file" "$FL_DIR/FLAIR.nii.gz"
+  echo "$CONTAINER  WARNING Missing FLAIR file, using duplicate T2w file as the FLAIR."
+  all_four_im_found=0
+fi
+
+# Both T1 + T1CE missing
+if [[ ! -f "$t1_file" ]] && [[ ! -f "$t1ce_file" ]]; then
+    if [[ -f "$t2_file" ]]; then
+      cp "$t2_file" "$T1_DIR/T1.nii.gz"
+      cp "$t2_file" "$T1CE_DIR/T1CE.nii.gz"
+      echo "$CONTAINER  WARNING Missing T1 & T1CE files, using duplicate T2w file as the T1/T1CE."
+      all_four_im_found=0
+    elif [[ -f "$flair_file" ]]; then
+      cp "$flair_file" "$T1_DIR/T1.nii.gz"
+      cp "$flair_file" "$T1CE_DIR/T1CE.nii.gz"
+      echo "$CONTAINER  WARNING Missing T1 & T1CE files, using duplicate FLAIR file as the T1/T1CE."
+      all_four_im_found=0
+    fi
+fi
+
+# Both T2 + FLAIR missing
+if [[ ! -f "$t2_file" ]] && [[ ! -f "$flair_file" ]]; then
+    if [[ -f "$t1_file" ]]; then
+      cp "$t1_file" "$T2_DIR/T2.nii.gz"
+      cp "$t1_file" "$FL_DIR/FLAIR.nii.gz"
+      echo "$CONTAINER  WARNING Missing T2 & FLAIR files, using duplicate T1 file as the T2/FLAIR."
+      all_four_im_found=0
+    elif [[ -f "$t1ce_w" ]]; then
+      cp "$t1ce_file" "$T2_DIR/T2.nii.gz"
+      cp "$t1ce_file" "$FL_DIR/FLAIR.nii.gz"
+      echo "$CONTAINER  WARNING Missing T2 & FLAIR files, using duplicate T1CE file as the T2/FLAIR."
+      all_four_im_found=0
+    fi
+fi
+
+## Gather any updates to input files
+t1_file=$(find $T1_DIR/* -maxdepth 0 -type f -name "*.nii*")
+t1ce_file=$(find $T1CE_DIR/* -maxdepth 0 -type f -name "*.nii*")
+t2_file=$(find $T2_DIR/* -maxdepth 0 -type f -name "*.nii*")
+flair_file=$(find $FL_DIR/* -maxdepth 0 -type f -name "*.nii*")
+
+# ensure images are not 4D
+python convert4Dto3D.py $t1_file
+python convert4Dto3D.py $t1ce_file
+python convert4Dto3D.py $t2_file
+python convert4Dto3D.py $flair_file
+
+###############################################################################
+## Execute the main processes
 
 ## If necessary input files are found, run the thing
 if [[ -f $t1_file ]] && \
@@ -49,14 +176,46 @@ if [[ -f $t1_file ]] && \
     -t1c "$t1ce_file" \
     -t2 "$t2_file" \
     -fl "$flair_file" \
+    -s $run_deepmedic_skullstripping \
+    -b $run_deepmedic_tumorsegmentation \
+    -i $save_intermediate_files \
+    -d $debug \
     -o ${output_dir}
 
     out_end_str=SRI
 
+  echo "$CONTAINER  BraTS pipeline complete"
+
+  # if ADC is found & 4 main sequences were input, run the registration to pre-processed T1CE
+  adc_file=$(find $ADC_DIR/* -maxdepth 0 -type f -name "*.nii*")
+  if [[ -f $adc_file ]] && [[ $all_four_im_found -eq 1 ]]; then
+    echo "$CONTAINER  Registering ADC to T1CE_to_SRI"
+    t1ce_preproc="output/T1CE_to_SRI.nii.gz"
+    reg_mat="output/affine_matrix.mat"
+    # generate an affine transformation matrix
+    ${CaPTk_dir}/bin/greedy -d 3 -a -m NMI \
+            -i "$t1ce_preproc" "$adc_file" \
+            -o "$reg_mat" \
+            -ia-image-centers -n 100x50x10 -dof 6
+    # apply the transformation matrix to the ADC image (perform co-reg)
+    ${CaPTk_dir}/bin/greedy -d 3 -rf "$t1ce_preproc" \
+            -ri LINEAR \
+            -rm "$adc_file" "output/ADC_to_SRI.nii.gz" \
+            -r "$reg_mat"
+  fi
+
   ## move results to output/ directory
+  echo "$CONTAINER  Cleaning up outputs"
   if [ "$(ls -A ${output_dir})" ]; then # if directory is not empty
-    mv ${output_dir}/brainTumorMask_${out_end_str}.nii.gz output/
-    mv ${output_dir}/brainMask_${out_end_str}.nii.gz output/
+
+    if [[ $run_deepmedic_skullstripping -eq 1 ]]; then
+      mv ${output_dir}/brainMask_${out_end_str}.nii.gz output/
+    fi
+
+    if [[ $run_deepmedic_tumorsegmentation -eq 1 ]]; then
+      mv ${output_dir}/brainTumorMask_${out_end_str}.nii.gz output/
+    fi
+
     mv ${output_dir}/*_to_${out_end_str}.nii.gz output/
 
     tar -cvzf ${output_dir}.tgz ${output_dir}

@@ -1,17 +1,17 @@
 {
   "name": "captk-brats-pipeline",
   "label": "CaPTk - BraTS Pipeline",
-  "description": "This tool provides a pipeline for pre-processing and auto-segmentation of structural images. Steps include: (1) orientation to standard (LPS/RAI) coordinates, (2) registration to SRI atlas, (3) skull stripping, (4) auto-segmentation with trained CNN model from BRATS 2017 challenge. User should manually check registration results. For best results T1 images should be 3D mprage sequences. If auto-segmentation model doesn't find a solution, output mask file will contain all zeros.",
-  "author": "Ariana Familiar",
-  "maintainer": "Ariana <familiara@chop.edu>",
-  "source": "https://github.com/d3b-center/fw-captk-brats-pipeline", 
+  "description": "Pre-processing pipeline using CaPTk tools (BraTSPipeline v1.8.1).",
+  "author": "D3b-TIRU",
+  "maintainer": "D3b-TIRU <flywheel@d3b.center>",
+  "source": "https://github.com/d3b-center/fw-captk-brats-pipeline",
   "url": "https://cbica.github.io/CaPTk/preprocessing_brats.html",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "custom": {
     "gear-builder": {
       "category": "analysis",
-      "image": "chop.flywheel.io/captk-brats-pipeline:0.0.3"
+      "image": "chop.flywheel.io/captk-brats-pipeline:0.1.0"
     },
     "flywheel": {
       "suite": "CaPTk"
@@ -53,22 +53,52 @@
           "nifti"
         ]
       }
+    },
+    "ADC": {
+      "base": "file",
+      "description": "Diffusion ADC image (nifti).",
+      "type": {
+        "enum": [
+          "nifti"
+        ]
+      }
     }
   },
   "config": {
+    "run_deepmedic_skullstripping": {
+      "default": false,
+      "description": "Whether to run DeepMedic-based skullstripping after pre-processing (default: False)",
+      "type": "boolean"
+    },
+    "run_deepmedic_tumorsegmentation": {
+      "default": false,
+      "description": "Whether to run DeepMedic-based tumor segmentation (BraTS pretrained model) after pre-processing (default: False)",
+      "type": "boolean"
+    },
+    "save_intermediate_files": {
+      "default": false,
+      "description": "Whether to save intermediate files (default: False)",
+      "type": "boolean"
+    },
+    "debug": {
+      "default": false,
+      "description": "Whether to print debugging information (default: False)",
+      "type": "boolean"
+    }
   },
-  "environment":{
-    "CAPTK_VERSION":"1.8.1",
-    "HOME":"/root",
-    "HOSTNAME":"0b633f948575",
-    "LD_LIBRARY_PATH":"/opt/captk/1.8.1/usr/lib/",
-    "MESA_GL_VERSION_OVERRIDE":"3.2",
-    "OLDPWD":"/opt/captk/1.8.1/usr",
-    "PATH":"/opt/captk/1.8.1/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-    "PWD":"/opt/captk/1.8.1/usr/bin",
-    "QT_GRAPHICSSYSTEM":"native",
-    "QT_X11_NO_MITSHM":"1",
-    "SHLVL":"1",
-    "TERM":"xterm"
+  "environment": {
+    "CAPTK_VERSION": "1.8.1",
+    "FLYWHEEL": "/flywheel/v0",
+    "HOME": "/root",
+    "HOSTNAME": "0b633f948575",
+    "LD_LIBRARY_PATH": "/opt/captk/1.8.1/usr/lib/",
+    "MESA_GL_VERSION_OVERRIDE": "3.2",
+    "OLDPWD": "/opt/captk/1.8.1/usr",
+    "PATH": "/opt/captk/1.8.1/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PWD": "/flywheel/v0",
+    "QT_GRAPHICSSYSTEM": "native",
+    "QT_X11_NO_MITSHM": "1",
+    "SHLVL": "1",
+    "TERM": "xterm"
   }
 }
