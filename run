@@ -161,7 +161,7 @@ if [[ ! -f "$t2_file" ]] && [[ ! -f "$flair_file" ]]; then
       all_four_im_found=0
       fake_t2=1
       fake_flair=1
-    elif [[ -f "$t1ce_w" ]]; then
+    elif [[ -f "$t1ce_file" ]]; then
       mkdir $T2_DIR
       mkdir $FL_DIR
       cp "$t1ce_file" "$T2_DIR/T2.nii.gz"
